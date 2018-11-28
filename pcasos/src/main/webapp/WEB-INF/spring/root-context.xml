@@ -1,0 +1,57 @@
+<?xml version="1.0" encoding="UTF-8"?>
+<beans xmlns="http://www.springframework.org/schema/beans"
+	xmlns:xsi="http://www.w3.org/2001/XMLSchema-instance"
+	xmlns:p="http://www.springframework.org/schema/p"
+	xmlns:jpa="http://www.springframework.org/schema/data/jpa"
+	xmlns:tx="http://www.springframework.org/schema/tx"
+	xsi:schemaLocation="http://www.springframework.org/schema/beans http://www.springframework.org/schema/beans/spring-beans.xsd
+		http://www.springframework.org/schema/data/jpa http://www.springframework.org/schema/data/jpa/spring-jpa-1.8.xsd
+		http://www.springframework.org/schema/tx http://www.springframework.org/schema/tx/spring-tx-4.3.xsd">
+	
+	<!-- Root Context: defines shared resources visible to all other web components -->
+	
+	<!-- _____________________DATASOURCES____________________________________________________________________________________ -->
+	<!-- Configuracion del DataSource, es la conexion a la BD pooleada usando C3P0 library -->
+	<bean id="ds1" class="com.mchange.v2.c3p0.ComboPooledDataSource" destroy-method="close">
+		<property name="driverClass" value="org.mariadb.jdbc.Driver" />
+		<property name="jdbcUrl" value="jdbc:mariadb://localhost:3306/carpetatidev" />
+		<property name="user" value="Developer"></property>
+		<property name="password" value="Desarrollo123" />
+		<property name="maxPoolSize" value="10" />
+		<property name="maxStatements" value="50" />
+		<property name="minPoolSize" value="5" />
+	</bean>
+	
+	<bean id="ds4" class="org.springframework.jdbc.datasource.DelegatingDataSource" destroy-method="finalize">
+		<property name="targetDataSource" ref="ds1"></property>
+	</bean>
+	
+	<!-- ______________CONFIGURACION PARA JPA/HIBERNATE/JPA REPOSITORY_______________________________________________________ -->
+	 <bean id="entityManagerFactory" class="org.springframework.orm.jpa.LocalContainerEntityManagerFactoryBean"
+		p:dataSource-ref="ds4" p:packagesToScan="org.carpetati.spring.model">
+		<property name="jpaVendorAdapter">
+			<bean class="org.springframework.orm.jpa.vendor.HibernateJpaVendorAdapter" />
+		</property>
+		<property name="jpaProperties">
+			<props>
+				<prop key="hibernate.dialect">org.hibernate.dialect.MariaDBDialect</prop>
+				<prop key="hibernate.hbm2ddl.auto">validate</prop>
+				<prop key="hibernate.show_sql">true</prop>
+				<prop key="hibernate.connection.SetBigStringTryClob">true</prop>
+			</props>
+		</property>
+	</bean>	
+	
+	<!-- _________________CONFIG JPA Repository____________________________________________________________________ -->
+	<jpa:repositories base-package="org.carpetati.spring.dao" entity-manager-factory-ref="entityManagerFactory" />
+	
+	<!-- _________________CONFIG DEL TRANSACTION MANAGER____________________________________________________________________ -->
+	<!-- Enable the configuration of transactional behavior based on annotations -->
+	 <tx:annotation-driven transaction-manager="transactionManager" />
+	<bean id="transactionManager" class="org.springframework.orm.jpa.JpaTransactionManager">
+		<property name="entityManagerFactory" ref="entityManagerFactory" />
+	</bean>	
+	
+	<!-- <bean class="org.springframework.web.multipart.commons.CommonsMultipartResolver" p:maxUploadSize="20971520" p:maxInMemorySize="1048576"/> -->
+		
+</beans>
